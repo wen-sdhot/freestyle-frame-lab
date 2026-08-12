@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>自由泳节奏实验室｜逐帧手腿配合</title>
+  <meta name="description" content="自由泳六次腿、四次腿、二次腿逐帧交互解析工具" />
+  <style>
+    :root {
+      --ink:#102a36; --muted:#607782; --paper:#f4f7f3; --card:#fbfdf9;
+      --cyan:#19b8b0; --cyan2:#78dfd5; --orange:#f26b3a; --yellow:#f5c84b;
+      --line:#cddbd8; --blue:#0a6f86; --shadow:0 16px 45px rgba(24,63,70,.10);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:.01em}
+    button,input{font:inherit} button{cursor:pointer}
+    .shell{max-width:1420px;margin:auto;padding:18px 22px 56px}
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 20px;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:12px}.brand-mark{width:38px;height:38px;border-radius:50%;background:var(--ink);display:grid;place-items:center;color:white;font-weight:800}.brand b{display:block}.brand small{color:var(--muted)}
+    .source-pill{font-size:12px;padding:8px 12px;border:1px solid var(--line);border-radius:99px;color:var(--muted);background:#fff}
+    .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:28px;padding:34px 0 26px;align-items:end}
+    h1{font-size:clamp(38px,5vw,74px);line-height:.98;letter-spacing:-.055em;margin:0;max-width:900px}.accent{color:var(--orange)}
+    .hero p{font-size:16px;line-height:1.8;color:var(--muted);max-width:480px;margin:0}.hero strong{color:var(--ink)}
+    .modebar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 18px}
+    .mode{border:1px solid var(--line);border-radius:14px;background:#fff;padding:11px 17px;color:var(--muted);font-weight:700;transition:.18s}.mode:hover{transform:translateY(-1px);border-color:var(--cyan)}.mode.active{background:var(--ink);border-color:var(--ink);color:white;box-shadow:0 8px 20px rgba(16,42,54,.18)}
+    .viewer-tabs{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 12px}.tabset{display:flex;gap:7px}.viewtab{border:1px solid var(--line);background:#fff;padding:9px 14px;border-radius:11px;color:var(--muted);font-weight:800}.viewtab.active{background:var(--orange);color:white;border-color:var(--orange)}.truth-note{font-size:11px;color:var(--muted)}
+    .flow-console{background:var(--ink);color:white;border-radius:22px;margin-bottom:16px;padding:18px 20px;box-shadow:var(--shadow)}
+    .flow-top{display:grid;grid-template-columns:250px 1fr;gap:20px;align-items:center}.flow-kicker{font-size:11px;color:#8ebdc2;font-weight:900;letter-spacing:.13em}.flow-beat{font-size:25px;font-weight:900;letter-spacing:-.03em;margin:4px 0}.flow-cue{color:#b7d2d5;font-size:12px;line-height:1.55}.flow-cue b{color:var(--yellow)}
+    .round-track{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.round{border:1px solid #31525d;border-radius:12px;padding:9px 10px;background:#133845;transition:.18s}.round.active{border-color:var(--cyan2);background:#174754}.round-head{display:flex;justify-content:space-between;font-size:10px;color:#8eb2b7;margin-bottom:9px}.round-head b{color:white}.round-beats{display:flex;align-items:center;justify-content:space-between;position:relative}.round-beats:before{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;background:#466670}.rbeat{position:relative;z-index:1;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#f59b59;color:#422113;font-size:9px;font-weight:900;border:2px solid #133845}.rbeat.heavy{width:26px;height:26px;background:var(--orange);color:white}.rbeat.active{outline:3px solid rgba(120,223,213,.65);transform:scale(1.12)}
+    .arm-lanes{display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:12px;align-items:center}.arm-lanes .labx{font-size:10px;color:#89adb3}.arm-state{border-top:1px solid #31535e;padding-top:8px;font-size:12px}.arm-state b{color:var(--cyan2);margin-right:7px}.cadence{margin-top:10px;display:flex;gap:7px;align-items:center;color:#a9c4c8;font-size:10px}.cadence strong{color:white}.cadence-code{display:flex;gap:4px}.cadence-code i{font-style:normal;padding:3px 7px;border-radius:99px;background:#31515b}.cadence-code i.heavy{background:var(--orange);color:white;font-weight:900}.cadence-code i.light{background:#80543d;color:#ffd5bc}
+    .lab{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:16px;align-items:stretch}
+    .stage{background:#dff4f0;border:1px solid #b7ded8;border-radius:22px;position:relative;min-height:520px;overflow:hidden;box-shadow:var(--shadow)}
+    .stage:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.26) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.26) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(to bottom,black,transparent 75%)}
+    .stage-head{position:absolute;top:18px;left:20px;right:20px;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .frame-badge{background:rgba(255,255,255,.84);backdrop-filter:blur(8px);border:1px solid white;border-radius:14px;padding:9px 12px;font:700 13px ui-monospace,monospace}.frame-badge span{color:var(--orange)}
+    .view-legend{display:flex;gap:12px;color:#3a6469;font-size:12px;background:rgba(255,255,255,.7);padding:8px 11px;border-radius:12px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.dot.power{background:var(--orange)}.dot.setup{background:var(--cyan)}
+    .real-view{position:absolute;inset:0 0 92px;background:#0878af;overflow:hidden}
+    #poseImage{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:opacity .14s ease,transform .24s ease;transform:scale(1.02)}
+    #poseImage.changing{opacity:.55}
+    .real-view.zoom-arm #poseImage{transform:scale(1.75);transform-origin:28% 51%}
+    .real-view.zoom-leg #poseImage{transform:scale(1.75);transform-origin:78% 56%}
+    #jointSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .real-view.zoom-arm #jointSvg{transform:scale(1.75);transform-origin:28% 51%}.real-view.zoom-leg #jointSvg{transform:scale(1.75);transform-origin:78% 56%}
+    .joint{fill:#fff;stroke:var(--orange);stroke-width:2.4;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}.joint-label{fill:white;font-size:12px;font-weight:900;paint-order:stroke;stroke:#0c3f54;stroke-width:4px;stroke-linejoin:round}.chain{fill:none;stroke:var(--orange);stroke-width:4;stroke-linecap:round;stroke-dasharray:8 7;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}.chain.leg{stroke:var(--yellow)}
+    .force-vector{stroke:white;stroke-width:4;marker-end:url(#photoArrow);filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+    .camera-tools{position:absolute;left:20px;bottom:16px;z-index:3;display:flex;gap:7px}.camera-tools button{border:1px solid rgba(255,255,255,.75);background:rgba(11,48,61,.76);color:white;padding:7px 10px;border-radius:9px;font-size:11px;font-weight:800;backdrop-filter:blur(5px)}.camera-tools button.active{background:var(--orange);border-color:var(--orange)}
+    .pose-note{position:absolute;right:20px;bottom:18px;z-index:3;background:rgba(6,39,53,.75);color:white;padding:8px 11px;border-radius:9px;font-size:11px;backdrop-filter:blur(6px)}
+    #swimVideo,#frameCanvas{position:absolute;inset:0;width:100%;height:100%;background:#062b38;display:none;object-fit:contain}.real-view.video-mode.local-mode #swimVideo{display:block}.real-view.video-mode.frame-inspect #frameCanvas{display:block}.real-view.video-mode.frame-inspect #swimVideo{visibility:hidden}.real-view.video-mode #poseImage,.real-view.video-mode #jointSvg,.real-view.video-mode .camera-tools,.real-view.video-mode .pose-note{display:none}.upload-btn{display:inline-block;background:var(--orange);color:#fff;padding:9px 13px;border-radius:9px;margin-top:8px;font-size:11px;font-weight:900;cursor:pointer}
+    .video-cal{position:absolute;left:18px;right:18px;bottom:17px;z-index:3;display:none;justify-content:space-between;gap:8px;align-items:center}.real-view.video-mode.local-mode .video-cal{display:flex}.cal-group{display:flex;gap:6px}.cal-btn{border:1px solid rgba(255,255,255,.7);background:rgba(6,39,53,.8);color:white;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800}.cal-btn.marked{background:var(--cyan);color:#073c3c}.cal-status{background:rgba(6,39,53,.8);color:white;border-radius:9px;padding:7px 10px;font-size:11px}.identity-rule{font-weight:900;color:var(--yellow)}
+    .online-note{position:absolute;left:18px;bottom:17px;z-index:3;background:rgba(6,39,53,.82);color:white;border-radius:9px;padding:7px 10px;font-size:11px;pointer-events:none}.real-view:not(.local-mode) .online-note{display:none}.online-note b{color:var(--yellow)}
+    .waterline{stroke:white;stroke-width:3;stroke-dasharray:4 10;opacity:.9}.bubble{fill:none;stroke:white;opacity:.48;stroke-width:2}
+    .body{fill:#134b5a}.body-highlight{fill:#1f6572}.skin{fill:#f6a674}.cap{fill:#f26b3a}.goggle{fill:#102a36}
+    .limb{fill:none;stroke:#123f4b;stroke-width:17;stroke-linecap:round;stroke-linejoin:round}.limb.back{stroke:#5b8990;opacity:.52;stroke-width:14}.hand{fill:#f6a674}.power-glow{fill:none;stroke:var(--orange);stroke-width:9;stroke-linecap:round;opacity:0}.power-glow.on{opacity:.8;filter:drop-shadow(0 0 7px rgba(242,107,58,.5))}.force-arrow{stroke:var(--orange);stroke-width:4;marker-end:url(#arrow);opacity:0}.force-arrow.on{opacity:1}.kick-ring{fill:none;stroke:var(--yellow);stroke-width:4;opacity:0}.kick-ring.on{opacity:.95;animation:pulse .65s ease-out infinite}@keyframes pulse{to{r:25;opacity:0}}
+    .stage-label{font-size:14px;font-weight:800;fill:#123f4b}.tiny-label{font-size:11px;fill:#4a7076}
+    .transport{position:absolute;left:18px;right:18px;bottom:16px;background:rgba(255,255,255,.92);backdrop-filter:blur(9px);border:1px solid white;border-radius:16px;padding:12px 14px;z-index:4}
+    .transport-row{display:grid;grid-template-columns:auto auto auto 1fr auto;gap:8px;align-items:center}.iconbtn{width:36px;height:34px;border-radius:10px;border:1px solid var(--line);background:white;color:var(--ink);font-weight:900}.iconbtn:hover{border-color:var(--cyan)}
+    .time{font:700 12px ui-monospace,monospace;color:var(--muted)}
+    input[type=range]{width:100%;accent-color:var(--orange)}
+    .beatline{position:relative;height:18px;margin:5px 6px 0}.beat-tick{position:absolute;top:3px;width:10px;height:10px;border-radius:50%;background:var(--cyan);transform:translateX(-50%);border:2px solid white;box-shadow:0 0 0 1px var(--cyan)}.beat-tick.primary{background:var(--orange);box-shadow:0 0 0 1px var(--orange);width:12px;height:12px;top:2px}.beat-tick.hit{transform:translateX(-50%) scale(1.35)}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:520px}
+    .eyebrow{font-size:12px;font-weight:900;color:var(--orange);letter-spacing:.14em;text-transform:uppercase}.phase-title{font-size:30px;letter-spacing:-.04em;margin:8px 0 5px}.phase-sub{color:var(--muted);font-size:13px;line-height:1.55;border-bottom:1px solid var(--line);padding-bottom:16px}
+    .cue{padding:15px 0;border-bottom:1px solid var(--line)}.cue:last-of-type{border:0}.cue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.cue h3{margin:0;font-size:14px}.tag{font-size:11px;border-radius:99px;padding:4px 7px;background:#e1f5f1;color:#08776f;font-weight:800}.tag.hot{background:#ffe8df;color:#bd4922}.cue p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+    .coach{margin-top:auto;background:var(--ink);color:white;border-radius:15px;padding:14px 15px}.coach small{color:#9ec0c4;display:block;margin-bottom:5px}.coach b{font-size:14px;line-height:1.45;display:block}
+    .lower{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;margin-top:16px}.card{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:22px}.card h2{font-size:22px;letter-spacing:-.025em;margin:0 0 5px}.intro{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 17px}
+    .cycle{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.cycle-step{min-height:94px;border:1px solid var(--line);border-radius:12px;padding:10px 8px;background:white;transition:.18s}.cycle-step.active{background:#fff2ea;border-color:var(--orange);transform:translateY(-2px)}.cycle-step b{font-size:12px;display:block}.cycle-step span{font-size:11px;color:var(--muted);display:block;margin-top:5px;line-height:1.45}.cycle-step em{display:block;font-style:normal;font:800 10px ui-monospace,monospace;color:var(--orange);margin-bottom:6px}
+    .controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.control-box{background:white;border:1px solid var(--line);padding:13px;border-radius:12px}.control-box label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin-bottom:8px}.seg{display:flex;gap:5px}.seg button{flex:1;border:1px solid var(--line);background:white;border-radius:8px;padding:7px 4px;font-size:11px}.seg button.active{background:var(--cyan);border-color:var(--cyan);color:#053d3a;font-weight:900}.switchrow{display:flex;align-items:center;justify-content:space-between;font-size:12px}.switch{width:42px;height:24px;background:#bacac8;border:0;border-radius:20px;position:relative}.switch:after{content:"";width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:.2s}.switch.on{background:var(--cyan)}.switch.on:after{left:21px}
+    .compare{margin-top:16px}.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.compare-item{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.compare-item .num{font-size:28px;font-weight:900;letter-spacing:-.05em}.compare-item h3{font-size:13px;margin:2px 0 7px}.compare-item p{font-size:12px;line-height:1.55;color:var(--muted);margin:0}.meter{display:flex;gap:3px;margin-top:10px}.meter i{display:block;height:4px;flex:1;border-radius:3px;background:#dce6e4}.meter i.on{background:var(--orange)}
+    .knowledge{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}.facts{display:grid;gap:9px}.fact{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;background:white;border:1px solid var(--line);border-radius:12px;padding:12px}.fact .n{font:900 13px ui-monospace,monospace;color:var(--orange)}.fact b{display:block;font-size:13px;margin-bottom:3px}.fact span{color:var(--muted);font-size:12px;line-height:1.55}.source-list{display:grid;gap:10px}.source{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;transition:.18s}.source:hover{border-color:var(--cyan);transform:translateX(2px)}.source b{font-size:13px}.source span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.disclaimer{margin-top:16px;padding:13px 15px;border-left:3px solid var(--yellow);background:#fff9e7;color:#6c5a23;font-size:12px;line-height:1.6;border-radius:0 10px 10px 0}
+    footer{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+    @media(max-width:1000px){.hero,.lab,.lower,.knowledge{grid-template-columns:1fr}.hero{gap:14px}.panel{min-height:auto}.coach{margin-top:12px}}
+    @media(max-width:650px){.shell{padding:12px 12px 40px}.source-pill{display:none}.viewer-tabs{align-items:flex-start;flex-direction:column}.truth-note{display:none}.flow-top{grid-template-columns:1fr}.round-track{grid-template-columns:1fr}.round:not(.active){display:none}.arm-lanes{grid-template-columns:55px 1fr}.arm-lanes .arm-state:last-child{grid-column:2}.stage{min-height:440px}.stage-head{top:12px;left:12px}.view-legend{display:none}.transport-row{grid-template-columns:auto auto auto 1fr}.time{display:none}.cycle{grid-template-columns:repeat(3,1fr)}.compare-grid{grid-template-columns:1fr}.controls-grid{grid-template-columns:1fr}.phase-title{font-size:25px}.online-note{left:12px;bottom:13px;max-width:75%;font-size:10px}footer{display:block}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><div class="brand-mark">泳</div><div><b>节奏实验室</b><small>Freestyle Frame Lab</small></div></div>
+      <div class="source-pill">本地真人教学原片 · 1080P / 30fps</div>
+    </header>
+
+    <section class="hero">
+      <div><div class="eyebrow">Stroke × Kick Coordination</div><h1>把手腿配合，<br><span class="accent">拆到关键帧。</span></h1></div>
+      <p>拖动观察轴，看清真人入水、抓水、划水、推水与每一次下打的关系。<strong>主节拍始终是：一侧手臂入水前伸，对侧腿向下打。</strong></p>
+    </section>
+
+    <nav class="modebar" aria-label="选择打腿节奏">
+      <button class="mode active" data-mode="6">六次腿 · 速度</button>
+      <button class="mode" data-mode="4">四次腿 · 混合</button>
+      <button class="mode" data-mode="2">二次腿 · 经济</button>
+    </nav>
+
+    <section class="flow-console" aria-label="连续配合节拍轨道">
+      <div class="flow-top">
+        <div><div class="flow-kicker">连续配合 · 3 个完整周期</div><div class="flow-beat" id="flowBeat">第 1 轮 · 第 1 拍 · 右腿重踢</div><div class="flow-cue" id="flowCue">左手入水前伸，同时右腿完成<b>主下打</b>。</div></div>
+        <div class="round-track" id="roundTrack"></div>
+      </div>
+      <div class="arm-lanes"><div class="labx">手臂位置</div><div class="arm-state"><b>左臂</b><span id="leftArmState">入水前伸</span></div><div class="arm-state"><b>右臂</b><span id="rightArmState">推水结束</span></div></div>
+      <div class="cadence"><strong>口令</strong><div class="cadence-code" id="cadenceCode"></div><span id="cadenceHelp">重腿负责换侧，轻腿负责续航与体位。</span></div>
+    </section>
+
+    <div class="viewer-tabs"><div class="tabset"><button class="viewtab active desktop-video-tab" data-view="video">电脑端真人逐帧</button><button class="viewtab" data-view="photo">真人关键帧参考</button></div><div class="truth-note">全部画面取自您下载的 1080P/30fps 原片；解析原则按 USMS 校验。</div></div>
+
+    <section class="lab">
+      <div class="stage">
+        <div class="stage-head"><div class="frame-badge">第 <span id="roundNo">1</span> 轮 · 帧 <span id="frameNo">001</span> / 060</div><div class="view-legend"><span><i class="dot power"></i>当前发力</span><span><i class="dot setup"></i>动作准备</span></div></div>
+        <div class="real-view video-mode local-mode" id="realView">
+          <video id="swimVideo" src="freestyle-video/6-beat.mp4" playsinline muted preload="auto"></video>
+          <img id="frameCanvas" alt="视频逐帧画面" />
+          <div class="online-note"><b id="clipType">六次腿片段</b> · 本地原片帧 <span id="sourceTime">000–179</span> · 左右按运动员本体</div>
+          <div class="video-cal"><div class="cal-group"><button class="cal-btn" id="markStart">设为周期起点</button><button class="cal-btn" id="markEnd">设为周期终点</button></div><div class="cal-status" id="calStatus">先标记同一只手的两次入水</div></div>
+          <img id="poseImage" src="freestyle-video/frames/6-stage-01.jpg" alt="原视频真人自由泳侧视关键帧" />
+          <svg id="jointSvg" viewBox="0 0 1000 460" preserveAspectRatio="none" aria-label="关节与发力链叠加层">
+            <defs><marker id="photoArrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="white"/></marker></defs>
+            <path id="armChain" class="chain"/><path id="legChain" class="chain leg"/><path id="photoForce" class="force-vector"/>
+            <g id="jointLayer"></g>
+          </svg>
+          <div class="camera-tools"><button class="active" data-zoom="full">全身</button><button data-zoom="arm">上肢放大</button><button data-zoom="leg">髋膝踝放大</button></div>
+          <div class="pose-note" id="poseNote">真人关键帧 1 / 6 · 全身侧视</div>
+        </div>
+        <div class="transport">
+          <div class="transport-row">
+            <button class="iconbtn" id="prev" title="上一帧">‹</button><button class="iconbtn" id="play" title="播放/暂停">▶</button><button class="iconbtn" id="next" title="下一帧">›</button>
+            <input id="timeline" type="range" min="0" max="179" value="0" aria-label="三个周期动作时间轴"/><span class="time" id="timeText">0.00 s</span>
+          </div><div class="beatline" id="beatline"></div>
+        </div>
+      </div>
+
+      <aside class="panel" aria-live="polite">
+        <div class="eyebrow" id="beatName">主节拍 · 1</div><h2 class="phase-title" id="phaseTitle">左手入水 × 右腿下打</h2><div class="phase-sub" id="phaseSub">对角链条启动：右腿下打帮助左髋、左肩进入前伸。</div>
+        <div class="cue"><div class="cue-head"><h3>手臂</h3><span class="tag" id="armTag">准备 → 建立支点</span></div><p id="armCue">手掌在肩线前方入水，先向前延伸；不要砸水，也不要越过身体中线。</p></div>
+        <div class="cue"><div class="cue-head"><h3>腿与髋</h3><span class="tag hot" id="legTag">主下打</span></div><p id="legCue">右腿由核心与髋部发起，下打幅度紧凑；脚踝放松、脚背延长。</p></div>
+        <div class="cue"><div class="cue-head"><h3>水下发力</h3><span class="tag" id="powerTag">衔接</span></div><p id="powerCue">另一侧手臂结束推水。让身体滚动连接手与腿，不要只靠肩膀拧动。</p></div>
+        <div class="coach"><small>这一帧只想一件事</small><b id="focusCue">右脚向下“点水”的同时，把左侧身体送长。</b></div>
+      </aside>
+    </section>
+
+    <section class="lower">
+      <div class="card"><h2>一周期六个节拍窗口</h2><p class="intro">上方连续轨道负责左右与重轻时序；这里点击查看当前轮次的动作细节。</p><div class="cycle" id="cycleCards"></div></div>
+      <div class="card"><h2>训练控制台</h2><p class="intro">先慢速建立顺序，再逐步加速。键盘：空格播放，←/→ 逐帧。</p>
+        <div class="controls-grid">
+          <div class="control-box"><label>播放速度</label><div class="seg" id="speedSeg"><button data-speed="0.25">0.25×</button><button class="active" data-speed="0.5">0.5×</button><button data-speed="1">1×</button></div></div>
+          <div class="control-box"><label>四次腿强化段</label><div class="seg" id="sideSeg"><button class="active" data-side="right">左臂段 3 拍</button><button data-side="left">右臂段 3 拍</button></div></div>
+          <div class="control-box"><div class="switchrow"><span>显示发力箭头</span><button class="switch on" id="forceSwitch" aria-label="显示发力箭头"></button></div></div>
+          <div class="control-box"><div class="switchrow"><span>阶段自动停顿</span><button class="switch" id="pauseSwitch" aria-label="阶段自动停顿"></button></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card compare"><h2>三种节奏，不是三种“快慢档”</h2><p class="intro">数字表示一个完整双臂周期内的向下打腿次数。选型看距离、平衡能力、脚踝效率与比赛策略。</p><div class="compare-grid">
+      <div class="compare-item"><div class="num">6-beat</div><h3>连续推进 / 高稳定</h3><p>每侧手臂周期配 3 次下打；主下打维持旋转，两个辅助拍补充推进与体位。</p><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+      <div class="compare-item"><div class="num">4-beat</div><h3>不对称混合节奏</h3><p>一侧 3 拍、另一侧 1 拍。常与呼吸侧和个人节奏相关，不必强求左右平均。</p><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+      <div class="compare-item"><div class="num">2-beat</div><h3>旋转锚点 / 省能</h3><p>每次单臂划水只配 1 次对侧主下打；对平衡与躯干连接要求最高。</p><div class="meter"><i class="on"></i><i></i><i></i><i></i><i></i></div></div>
+    </section>
+
+    <section class="knowledge">
+      <div class="card"><h2>高手策略怎么借鉴</h2><p class="intro">借鉴“选择逻辑”，不机械复制外形。</p><div class="facts">
+        <div class="fact"><div class="n">01</div><div><b>长距离：把腿当节拍器</b><span>二次腿常用于长距离以节省能量；末段需要提速时可切入六次腿。</span></div></div>
+        <div class="fact"><div class="n">02</div><div><b>四次腿：接受有功能的不对称</b><span>USMS 教程列举孙杨会随呼吸节奏在二、四次腿之间变化，末段再提升到六次腿。</span></div></div>
+        <div class="fact"><div class="n">03</div><div><b>短距离：持续推进仍需动作质量</b><span>六次腿提供更多推进并帮助抵消划臂造成的髋部下沉，但幅度过大仍会增加阻力。</span></div></div>
+      </div></div>
+      <div class="card"><h2>依据与延伸阅读</h2><p class="intro">原片用于观察真实连续动作；节拍解释按 USMS 教学资料校验，不冒充实验室运动捕捉。</p><div class="source-list">
+        <a class="source" href="https://effortlessswimming.com/2-beat-4-beat-or-6-beat-kick/" target="_blank" rel="noreferrer"><b>Effortless Swimming · 2 / 4 / 6 Beat Kick</b><span>本页在线视频来源：三种节奏的水下侧视连续示范</span></a>
+        <a class="source" href="https://www.usms.org/fitness-and-training/articles-and-videos/articles/kick-timing-101" target="_blank" rel="noreferrer"><b>USMS · Kick Timing 101</b><span>二、四、六次腿计数与对侧同步</span></a>
+        <a class="source" href="https://lanemate.usms.org/fitness-and-training/guides/freestyle/kick" target="_blank" rel="noreferrer"><b>USMS LaneMate · Freestyle Kick</b><span>下打、髋部旋转、脚踝与常见错误</span></a>
+        <a class="source" href="https://lanemate.usms.org/fitness-and-training/guides/freestyle/pull" target="_blank" rel="noreferrer"><b>USMS LaneMate · Freestyle Pull</b><span>入水、抓水、划水、出水与恢复</span></a>
+        <a class="source" href="https://www.usms.org/fitness-and-training/articles-and-videos/articles/synchronizing-kick-and-stroke" target="_blank" rel="noreferrer"><b>USMS · Synchronizing Kick and Stroke</b><span>0→2→4→6 次腿渐进练习</span></a>
+      </div><div class="disclaimer">安全提示：肩部或腰髋疼痛时不要强行模仿高肘或大幅滚转。动画用于理解节奏，个人动作应结合水下录像与合格教练反馈。</div></div>
+    </section>
+    <footer><span>自由泳节奏实验室 · 教学可视化</span><span>动作周期为相对时序，不代表所有运动员的唯一标准。</span></footer>
+  </main>
+
+  <script>
+    const CYCLE=60, ROUNDS=3, TOTAL=CYCLE*ROUNDS;
+    const localClips={
+      6:{src:'freestyle-video/6-beat.mp4',label:'六次腿片段'},
+      4:{src:'freestyle-video/4-beat.mp4',label:'四次腿片段'},
+      2:{src:'freestyle-video/2-beat.mp4',label:'二次腿片段'}
+    };
+    const state={frame:0,mode:6,playing:false,speed:.5,side:'right',force:true,autoPause:false,lastStage:0,lastTs:0,view:'video',videoKind:'local',videoStart:0,videoEnd:6,videoRound:0};
+    const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+    const timeline=$('#timeline'), playBtn=$('#play'), swimVideo=$('#swimVideo'), frameCanvas=$('#frameCanvas');
+    const poseAssets=()=>[1,2,3,4,5,6].map(n=>`freestyle-video/frames/${state.mode}-stage-${String(n).padStart(2,'0')}.jpg`);
+    const poseFunctions=['入水与身体延伸','高肘抓水 / 立前臂','推水至髋旁','入水与身体延伸','高肘抓水 / 立前臂','推水至髋旁'];
+    // Coordinates are normalized to the photo overlay viewBox (1000 × 460).
+    // They identify observable joint regions, not medical-grade motion-capture measurements.
+    const joints=[
+      {arm:[[335,235,'肩'],[205,237,'肘'],[78,239,'腕']],leg:[[620,260,'髋'],[770,232,'膝'],[892,215,'踝']]},
+      {arm:[[342,228,'抓水肩'],[205,245,'高肘'],[172,354,'垂直腕']],leg:[[632,255,'近侧髋'],[780,218,'近侧膝'],[906,204,'近侧踝']]},
+      {arm:[[352,235,'划水肩'],[454,270,'划水肘'],[590,292,'推水腕']],leg:[[630,260,'近侧髋'],[775,298,'近侧膝'],[906,325,'近侧踝']]},
+      {arm:[[335,235,'前伸肩'],[205,237,'前伸肘'],[78,239,'前伸腕']],leg:[[620,260,'近侧髋'],[770,232,'近侧膝'],[892,215,'近侧踝']]},
+      {arm:[[342,228,'抓水肩'],[205,245,'高肘'],[172,354,'垂直腕']],leg:[[632,255,'近侧髋'],[780,218,'近侧膝'],[906,204,'近侧踝']]},
+      {arm:[[352,235,'划水肩'],[454,270,'划水肘'],[590,292,'推水腕']],leg:[[630,260,'近侧髋'],[775,298,'近侧膝'],[906,325,'近侧踝']]}
+    ];
+    const armKeys=[
+      [0,[140,178],[203,158],'入水前伸'],[.08,[98,190],[170,185],'前伸'],[.18,[125,246],[185,194],'抓水'],
+      [.34,[250,276],[213,225],'划水'],[.50,[408,250],[335,225],'推水'],[.60,[430,177],[372,158],'出水'],
+      [.73,[330,120],[350,106],'移臂'],[.88,[190,130],[248,105],'前摆'],[1,[140,178],[203,158],'入水前伸']
+    ];
+    const stages=[
+      {p:0,title:'左手入水 × 右腿下打',sub:'对角链条启动：右腿下打帮助左髋、左肩进入前伸。',arm:'肩线前入水，顺着前进方向延伸；避免越过身体中线。',leg:'右腿由核心与髋部发起主下打，脚踝放松、脚背延长。',power:'右臂结束向后推水，身体滚动把两端连接起来。',focus:'右脚向下“点水”的同时，把左侧身体送长。'},
+      {p:1/6,title:'左臂建立抓水 × 左腿辅助下打',sub:'前臂开始朝后建立有效受力面，腿维持窄幅连续。',arm:'指尖略低于手腕、手腕略低于肘；抓水是摆位，不要急着猛拉。',leg:'左腿轻快下打，膝盖只自然微屈，不做“骑自行车”。',power:'手掌与前臂逐渐朝后，准备进入主要推进段。',focus:'先摆好前臂，再加速；这一拍腿要小。'},
+      {p:2/6,title:'左臂划水加速 × 右腿辅助下打',sub:'手掌和前臂向后压水，身体从支点上方前移。',arm:'肘部保持相对高位，手在肩下方经过，避免跨中线。',leg:'右腿辅助下打，保持脚趾靠近水面，控制上下幅度。',power:'主要推进开始：向后作用于水，而不是向下压水。',focus:'前臂像一块桨，向后加压；头保持安静。'},
+      {p:.5,title:'右手入水 × 左腿下打',sub:'周期镜像：左腿主下打，帮助右侧身体前伸与滚转。',arm:'右手在肩线前入水；左臂在髋旁完成推水并顺势出水。',leg:'左腿主下打是第二个旋转锚点，力量来自核心和髋。',power:'左手向后上方完成推水，随即放松进入移臂。',focus:'左脚下打时，把右侧身体送长。'},
+      {p:4/6,title:'右臂建立抓水 × 右腿辅助下打',sub:'恢复到抓水的过渡要流畅，身体保持长而窄。',arm:'右前臂逐步转为朝后，手掌稳定，不要在前方停顿。',leg:'右腿轻快下打，双腿靠近身体中线，减少迎水面积。',power:'抓水阶段以摆位为主，避免过早消耗肩部力量。',focus:'让肘“留在前面”，指尖向下找水。'},
+      {p:5/6,title:'右臂划水加速 × 左腿辅助下打',sub:'完成第二侧推进，为下一个主节拍蓄势。',arm:'手掌和前臂一起向后加速，出水前保持连续。',leg:'左腿辅助下打，随后回到下一次右腿主下打的预备位。',power:'推进方向向后；身体前进来自对水的反作用。',focus:'保持窄幅腿，划臂向后，不要向身体下方压。'}
+    ];
+    const armTag=['入水 → 前伸','抓水摆位','主要推进','入水 → 前伸','抓水摆位','主要推进'];
+    const stageLabels=['主节拍 · 1','辅助拍 · 2','辅助拍 · 3','主节拍 · 1','辅助拍 · 2','辅助拍 · 3'];
+    const stageArmTitles=['左手入水','左臂建立抓水','左臂划水加速','右手入水','右臂建立抓水','右臂划水加速'];
+    function lerp(a,b,t){return a+(b-a)*t} function smooth(t){return t*t*(3-2*t)}
+    function armPose(p){p=((p%1)+1)%1;let a=armKeys[0],b=armKeys[1];for(let i=0;i<armKeys.length-1;i++){if(p>=armKeys[i][0]&&p<=armKeys[i+1][0]){a=armKeys[i];b=armKeys[i+1];break}}const q=smooth((p-a[0])/(b[0]-a[0]||1));return {h:[lerp(a[1][0],b[1][0],q),lerp(a[1][1],b[1][1],q)],e:[lerp(a[2][0],b[2][0],q),lerp(a[2][1],b[2][1],q)],name:q<.5?a[3]:b[3]}}
+    function beats(){if(state.mode===6)return [{t:0,leg:'R',main:1,word:'重'},{t:1/6,leg:'L',word:'轻'},{t:2/6,leg:'R',word:'轻'},{t:.5,leg:'L',main:1,word:'重'},{t:4/6,leg:'R',word:'轻'},{t:5/6,leg:'L',word:'轻'}];if(state.mode===2)return[{t:0,leg:'R',main:1,word:'重'},{t:.5,leg:'L',main:1,word:'重'}];return state.side==='right'?[{t:0,leg:'R',main:1,word:'重'},{t:1/6,leg:'L',word:'轻'},{t:2/6,leg:'R',word:'轻'},{t:.5,leg:'L',main:1,word:'重'}]:[{t:0,leg:'R',main:1,word:'重'},{t:.5,leg:'L',main:1,word:'重'},{t:4/6,leg:'R',word:'轻'},{t:5/6,leg:'L',word:'轻'}]}
+    function cyclicDelta(a,b){let d=a-b;while(d>.5)d-=1;while(d<-.5)d+=1;return d}
+    function legAngle(leg,t){let v=-2;for(const b of beats().filter(x=>x.leg===leg)){const d=cyclicDelta(t,b.t);if(d>=-.075&&d<0)v+=lerp(-8,18,smooth((d+.075)/.075));else if(d>=0&&d<.11)v+=lerp(18,0,smooth(d/.11));}return v}
+    function setPath(el,pts){el.setAttribute('d',`M${pts[0][0]} ${pts[0][1]} Q${pts[1][0]} ${pts[1][1]} ${pts[2][0]} ${pts[2][1]}`)}
+    function setCircle(el,p){el.setAttribute('cx',p[0]);el.setAttribute('cy',p[1])}
+    function legPose(angle,back=false){const hip=[497,214+(back?-5:5)],knee=[600,217+angle*.48],foot=[724,218+angle];return{hip,knee,foot}}
+    function currentKick(t){let best=null,dist=.03;for(const b of beats()){const d=Math.abs(cyclicDelta(t,b.t));if(d<dist){dist=d;best=b}}return best}
+    function stageKick(s){return beats().find(b=>Math.abs(cyclicDelta(stages[s].p,b.t))<.01)}
+    function nearestStage(t){return Math.floor(((t+1/12)%1)*6)%6}
+    function armPhase(p){p=((p%1)+1)%1;if(p<.10)return'入水前伸';if(p<.22)return'前伸后建立抓水';if(p<.42)return'高肘抓水→划水';if(p<.58)return'推水至髋旁';if(p<.72)return'出水';if(p<.90)return'放松移臂';return'准备入水'}
+    function activeBeat(t){let best=beats()[0],dist=2,index=0;beats().forEach((b,i)=>{const d=Math.abs(cyclicDelta(t,b.t));if(d<dist){best=b;dist=d;index=i}});return{...best,index,dist}}
+    function renderFlow(t,round){const b=activeBeat(t),leg=b.leg==='R'?'右腿':'左腿',op=b.leg==='R'?'左手':'右手';$('#flowBeat').textContent=`第 ${round+1} 轮 · 第 ${b.index+1} 拍 · ${leg}${b.word}踢`;$('#flowCue').innerHTML=b.main?`${op}入水前伸，同时${leg}完成<b>主下打（重）</b>，驱动换侧。`:`${leg}<b>轻踢</b>：保持窄幅与体位，不抢手臂主发力。`;$('#leftArmState').textContent=armPhase(t);$('#rightArmState').textContent=armPhase(t+.5);$$('.round').forEach((x,i)=>x.classList.toggle('active',i===round));$$('.rbeat').forEach(x=>x.classList.toggle('active',+x.dataset.round===round&&+x.dataset.beat===b.index));}
+    function buildFlow(){const track=$('#roundTrack');track.innerHTML='';for(let r=0;r<ROUNDS;r++){const box=document.createElement('div');box.className='round'+(r===0?' active':'');box.innerHTML=`<div class="round-head"><b>第 ${r+1} 轮</b><span>完整双臂周期</span></div><div class="round-beats">${beats().map((b,i)=>`<i class="rbeat ${b.main?'heavy':''}" data-round="${r}" data-beat="${i}" title="${b.leg==='R'?'右腿':'左腿'}${b.word}踢">${b.word}</i>`).join('')}</div>`;track.appendChild(box)}const code=$('#cadenceCode');code.innerHTML=beats().map(b=>`<i class="${b.main?'heavy':'light'}">${b.leg==='R'?'右':'左'}${b.word}</i>`).join('');$('#cadenceHelp').textContent=state.mode===6?'六次腿口令：右重—左轻—右轻｜左重—右轻—左轻':state.mode===4?'四次腿：两个主换侧拍＋一侧两个辅助轻拍':'二次腿：只有两个对侧主换侧重拍，中间不补踢';}
+    function drawJointOverlay(s){
+      const data=joints[s], layer=$('#jointLayer');layer.innerHTML='';
+      const path=pts=>'M'+pts.map((p,i)=>(i?'L':'')+p[0]+' '+p[1]).join(' ');
+      $('#armChain').setAttribute('d',path(data.arm));$('#legChain').setAttribute('d',path(data.leg));
+      [...data.arm,...data.leg].forEach(p=>{const ns='http://www.w3.org/2000/svg',c=document.createElementNS(ns,'circle'),t=document.createElementNS(ns,'text');c.setAttribute('class','joint');c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r','7');t.setAttribute('class','joint-label');t.setAttribute('x',p[0]+11);t.setAttribute('y',p[1]-9);t.textContent=p[2];layer.append(c,t)});
+      const a=data.arm[2], l=data.leg[2], sk=stageKick(s);let d=`M${a[0]} ${a[1]} L${Math.max(25,a[0]-78)} ${a[1]+5}`;if(sk)d+=` M${l[0]} ${l[1]} L${l[0]+18} ${Math.min(440,l[1]+72)}`;$('#photoForce').setAttribute('d',d);$('#photoForce').style.display=state.force?'block':'none';
+    }
+    function renderPhoto(s){
+      const img=$('#poseImage'), key=state.mode+'-'+s; if(img.dataset.pose!=key){img.classList.add('changing');img.src=poseAssets()[s];img.dataset.pose=key;setTimeout(()=>img.classList.remove('changing'),100)}
+      $('#poseNote').textContent=`原视频真人帧 · ${poseFunctions[s]} · ${state.mode} 次腿`;$('#jointSvg').style.display='none';
+    }
+    function render(){
+      const round=Math.min(ROUNDS-1,Math.floor(state.frame/CYCLE)), localFrame=state.frame%CYCLE, t=localFrame/CYCLE, s=nearestStage(t), left=armPose(t), right=armPose(t+.5), front=t<.5?left:right, back=t<.5?right:left;
+      const kick=currentKick(t);renderPhoto(s);
+      $('#roundNo').textContent=round+1;$('#frameNo').textContent=String(Math.floor(localFrame)+1).padStart(3,'0');$('#timeText').textContent=(state.frame/(TOTAL-1)*(state.videoEnd-state.videoStart)).toFixed(2)+' s';timeline.value=state.frame;renderFlow(t,round);
+      const d=stages[s], sk=stageKick(s), skName=sk?(sk.leg==='R'?'右腿':'左腿'):'';
+      $('#beatName').textContent=(sk?(sk.main?'主节拍':'辅助节拍'):'无下打窗口')+' · '+state.mode+' 次腿';
+      $('#phaseTitle').textContent=stageArmTitles[s]+' × '+(sk?skName+'下打':'双腿回摆');$('#phaseSub').textContent=d.sub;$('#armCue').textContent=d.arm;
+      $('#legCue').textContent=sk?d.leg:'此窗口没有独立下打；双腿保持窄幅回摆，为下一次主节拍预备，避免僵硬停腿。';$('#powerCue').textContent=d.power;
+      $('#focusCue').textContent=sk?d.focus:((s<3?'左':'右')+'臂动作继续，双腿放松回摆，不要额外补踢。');$('#armTag').textContent=armTag[s];$('#legTag').textContent=sk?(skName+(sk.main?'主下打':'辅助下打')):'回摆 / 平衡';$('#powerTag').textContent=(s===2||s===5)?'推进加速':'衔接';
+      $$('.cycle-step').forEach((x,i)=>x.classList.toggle('active',i===s)); $$('.beat-tick').forEach(x=>x.classList.toggle('hit',Math.abs(state.frame/TOTAL-(+x.dataset.t))<.008));
+      return s;
+    }
+    function videoReady(){return swimVideo.readyState>=1&&Number.isFinite(swimVideo.duration)}
+    function mediaTime(){return swimVideo.currentTime}
+    function pauseMedia(){swimVideo.pause()}
+    function playMedia(){swimVideo.playbackRate=state.speed;swimVideo.play().catch(()=>{})}
+    function setMediaTime(t){swimVideo.currentTime=Math.max(0,Math.min(swimVideo.duration||6,t));swimVideo.pause()}
+    function applyLocalClip(reset=true){const c=localClips[state.mode];state.videoKind='local';state.videoStart=0;state.videoEnd=6;$('#clipType').textContent=c.label;$('#sourceTime').textContent='000–179';$('#realView').classList.add('local-mode');if(reset){state.frame=0;state.videoRound=0}swimVideo.onloadedmetadata=()=>{state.videoEnd=swimVideo.duration;setMediaTime(Math.round(state.frame)/30);render()};swimVideo.src=c.src;swimVideo.load()}
+    function showExactFrame(){const n=Math.max(1,Math.min(179,Math.round(state.frame)+1));frameCanvas.src=`freestyle-video/frame-sequences/${state.mode}/frame-${String(n).padStart(3,'0')}.jpg`;$('#realView').classList.add('frame-inspect');$('#sourceTime').textContent=`${String(n-1).padStart(3,'0')} / 179`}
+    function seekVideoFromFrame(){if(state.view!=='video')return;pauseMedia();showExactFrame();state.videoRound=Math.floor(state.frame/CYCLE)}
+    function rebuildBeats(){const line=$('#beatline');line.innerHTML='';for(let r=0;r<ROUNDS;r++)beats().forEach((b,i)=>{const el=document.createElement('i');el.className='beat-tick'+(b.main?' primary':'');el.style.left=((r+b.t)/ROUNDS*100)+'%';el.dataset.t=(r+b.t)/ROUNDS;el.title=`第${r+1}轮 ${b.leg==='R'?'右腿':'左腿'}${b.word}踢`;line.appendChild(el)});buildFlow();render()}
+    function buildStages(){const labels=[['00','入水 × 主下打'],['01','抓水 × 辅助拍'],['02','划水 × 辅助拍'],['03','换侧 × 主下打'],['04','抓水 × 辅助拍'],['05','划水 × 辅助拍']];const c=$('#cycleCards');labels.forEach((x,i)=>{const b=document.createElement('button');b.className='cycle-step';b.innerHTML=`<em>${x[0]}</em><b>${x[1]}</b><span>${stages[i].focus}</span>`;b.onclick=()=>{const r=Math.floor(state.frame/CYCLE);state.frame=r*CYCLE+Math.round(stages[i].p*CYCLE)%CYCLE;render()};c.appendChild(b)})}
+    function setPlay(v){
+      if(v&&state.view==='video'){
+        if(!videoReady()){state.playing=false;playBtn.textContent='▶';return}
+        $('#realView').classList.remove('frame-inspect');state.videoRound=Math.floor(state.frame/CYCLE);setMediaTime(state.frame/30);playMedia();
+      }else pauseMedia();
+      state.playing=v;playBtn.textContent=v?'Ⅱ':'▶';state.lastTs=performance.now()
+    }
+    function tick(ts){
+      if(state.playing&&state.view==='video'&&videoReady()){
+        let now=mediaTime();if(now>=state.videoEnd-.04||now<state.videoStart-.1){state.videoRound=0;setMediaTime(state.videoStart);playMedia();now=state.videoStart}
+        const p=Math.max(0,Math.min(.999,(now-state.videoStart)/(state.videoEnd-state.videoStart)));state.frame=Math.min(TOTAL-1,now*30);state.videoRound=Math.floor(state.frame/CYCLE);render();
+      }else if(state.playing){const delta=Math.min(50,ts-state.lastTs);const old=nearestStage((state.frame%CYCLE)/CYCLE);state.frame=(state.frame+delta*.06*state.speed)%TOTAL;const now=nearestStage((state.frame%CYCLE)/CYCLE);if(state.autoPause&&now!==old){const r=Math.floor(state.frame/CYCLE);state.frame=r*CYCLE+Math.round(stages[now].p*CYCLE)%CYCLE;setPlay(false)}render()}
+      state.lastTs=ts;requestAnimationFrame(tick)
+    }
+    $$('.mode').forEach(b=>b.onclick=()=>{setPlay(false);$$('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.mode=+b.dataset.mode;applyLocalClip();showExactFrame();rebuildBeats()});
+    timeline.oninput=e=>{state.frame=+e.target.value;setPlay(false);seekVideoFromFrame();render()};playBtn.onclick=()=>setPlay(!state.playing);$('#prev').onclick=()=>{state.frame=(Math.round(state.frame)-1+TOTAL)%TOTAL;setPlay(false);seekVideoFromFrame();render()};$('#next').onclick=()=>{state.frame=(Math.round(state.frame)+1)%TOTAL;setPlay(false);seekVideoFromFrame();render()};
+    $$('#speedSeg button').forEach(b=>b.onclick=()=>{$$('#speedSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.speed=+b.dataset.speed;swimVideo.playbackRate=state.speed});$$('#sideSeg button').forEach(b=>b.onclick=()=>{$$('#sideSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.side=b.dataset.side;if(state.mode===4)rebuildBeats()});
+    $('#forceSwitch').onclick=e=>{state.force=!state.force;e.currentTarget.classList.toggle('on',state.force);render()};$('#pauseSwitch').onclick=e=>{state.autoPause=!state.autoPause;e.currentTarget.classList.toggle('on',state.autoPause)};
+    $$('.camera-tools button').forEach(b=>b.onclick=()=>{$$('.camera-tools button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const v=$('#realView');v.classList.remove('zoom-arm','zoom-leg');if(b.dataset.zoom!=='full')v.classList.add('zoom-'+b.dataset.zoom)});
+    $$('.viewtab').forEach(b=>b.onclick=()=>{setPlay(false);$$('.viewtab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.view=b.dataset.view;$('#realView').classList.toggle('video-mode',state.view==='video');if(state.view==='video')seekVideoFromFrame();render()});
+    $('#markStart').onclick=()=>{$('#calStatus').textContent='内置片段已按原片切分，无需再次校准'};
+    $('#markEnd').onclick=()=>{$('#calStatus').textContent='每段 6 秒 / 180 个真实视频帧'};
+    addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();setPlay(!state.playing)}if(e.code==='ArrowLeft')$('#prev').click();if(e.code==='ArrowRight')$('#next').click()});
+    const compactDevice=matchMedia('(max-width:650px)').matches;if(compactDevice){state.view='photo';swimVideo.removeAttribute('src');$('#realView').classList.remove('video-mode');$$('.viewtab').forEach(x=>x.classList.toggle('active',x.dataset.view==='photo'))}
+    buildStages();if(!compactDevice)applyLocalClip(false);rebuildBeats();requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

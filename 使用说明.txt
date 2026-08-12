@@ -1,0 +1,19 @@
+自由泳真人视频逐帧实验室
+
+公开使用
+网页发布为 HTTPS 公共站点后，任何人都可通过同一网址访问，不要求同一 Wi-Fi，也不需要单独创建 IP。
+
+说明
+- 电脑端视频已本地化，不依赖 YouTube 或网络。
+- “六次腿 / 四次腿 / 二次腿”会切换到原教学中的对应 1080P 真人片段。
+- 每段 6 秒，共约 180 个 30fps 原始帧；拖动时间轴或点击左右按钮会显示独立导出的精确帧。
+- “真人关键帧参考”全部由同一原视频截取，不使用生成动画或生成泳者。
+- 手机端默认不加载大体积视频，只显示真人关键帧参考。
+- 电脑端公共网页可播放本地化真人片段；手机端公共网页默认只加载真人关键帧。
+
+视频与教学依据
+- 视频：用户提供的 1920×1080 / 30fps 本地文件，节目来源 Effortless Swimming。
+- 原片画质上限：该公开视频最高可获得格式即 1080P / 30fps，没有同源 4K 版本。
+- USMS Kick Timing 101: https://www.usms.org/fitness-and-training/articles-and-videos/articles/kick-timing-101
+- USMS Freestyle Kick: https://lanemate.usms.org/fitness-and-training/guides/freestyle/kick
+- USMS Freestyle Pull: https://lanemate.usms.org/fitness-and-training/guides/freestyle/pull
